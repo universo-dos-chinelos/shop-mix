@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrinho de Compras</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #2209ff;
+    }
+    .product-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      justify-items: center;
+    }
+    .product {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 100%;
+      transition: transform 0.3s ease;
+    }
+    .product:hover {
+      transform: translateY(-10px);
+    }
+    .product img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    .product h3 {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+    .prices span {
+      display: block;
+    }
+    .retail {
+      color: #007BFF;
+    }
+    .wholesale {
+      color: #28a745;
+    }
+    .controls {
+      margin: 10px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      align-items: center;
+    }
+    .controls label {
+      font-size: 0.9em;
+    }
+    .controls select,
+    .controls input {
+      padding: 5px;
+      font-size: 0.9em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+      max-width: 120px;
+      text-align: center;
+    }
+    .product button {
+      background: #007BFF;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      margin-top: 10px;
+    }
+    .product button:hover {
+      background: #0056b3;
+    }
+    .cart {
+      position: fixed;
+      right: 20px;
+      top: 20px;
+      background: #007BFF;
+      color: white;
+      padding: 15px;
+      border-radius: 50%;
+      font-size: 1.5em;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .cart-menu {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 320px;
+      height: 100%;
+      background: white;
+      box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      transform: translateX(100%);
+      transition: transform 0.3s ease-in-out;
+      overflow-y: auto;
+    }
+    .cart-menu.open {
+      transform: translateX(0);
+    }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 10px;
+      background: #f9f9f9;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .cart-item img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 5px;
+    }
+    .cart-item input {
+      width: 50px;
+      text-align: center;
+    }
+    .cart-item button {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .cart-item button:hover {
+      background: #c82333;
+    }
+    .pricing-toggle {
+      margin: 10px 0;
+      text-align: center;
+    }
+    .pricing-toggle button {
+      background: #ffc107;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 0 5px;
+      font-size: 0.9em;
+    }
+    .pricing-toggle button:hover {
+      background: #e0a800;
+    }
+    .cart-footer {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .cart-footer button {
+      background: #28a745;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+ 
+    
+    .cart-footer button:hover {
+      background: #218838;
+    }
+
+  </style>
+</head>
+<body>
+  <h1>universo dos chinelos </h1>
+  <div class="product-container" id="productList"></div>
+
+  <div class="cart" onclick="toggleCart()">🛒</div>
+
+  <div class="cart-menu" id="cartMenu">
+    <h2>Carrinho</h2>
+    <div id="cart-items"></div>
+    <div id="pricing-toggle" class="pricing-toggle"></div>
+    <p><strong>Total: </strong><span id="total-price">R$ 0,00</span></p>
+    <div class="cart-footer">
+      <button onclick="finalizePurchase()">Finalizar Compra</button>
+      <button onclick="toggleCart()">Fechar</button>
+    </div>
+  </div>
+
+  <script>
+    let cart = [];
+    // Variável para definir se o preço de atacado está ativo
+    let useWholesale = false;
+
+    let products = [
+      { 
+        name: "crocs plataforma preto", 
+        retailPrice: 55, 
+        wholesalePrice: 40, 
+        sizes: ["34", "35", "36","37","38","39"], 
+        image: "https://i.im.ge/2025/02/12/HwlNlW.WhatsApp-Image-2025-02-11-at-12-03-02-1-removebg-preview.png" 
+      },
+      { 
+        name: "crocs plataforma beje ", 
+        retailPrice: 55, 
+        wholesalePrice: 40, 
+        sizes: ["34", "35", "36","37","38","39"], 
+        image: "https://i.im.ge/2025/02/12/HwlwVr.WhatsApp-Image-2025-02-11-at-12-03-02-removebg-preview.png" 
+      },
+      { 
+        name: "havaiananas top square fusion preta com beje ", 
+        retailPrice: 17, 
+        wholesalePrice: 13, 
+        sizes: ["34", "35", "36","37","38","39"], 
+        image: "https://i.im.ge/2025/02/19/Hxxk9a.WhatsApp-Image-2025-02-17-at-13-19-47-1-removebg-preview.png" 
+      },
+
+      { 
+        name: "havaiananas top square fusion roxa com preto ", 
+        retailPrice: 17, 
+        wholesalePrice: 13, 
+        sizes: ["34", "35", "36","37","38","39"], 
+        image: "https://i.im.ge/2025/02/19/Hxxz8J.WhatsApp-Image-2025-02-17-at-13-19-47-removebg-preview.png" 
+      },
+
+      { 
+        name: "havaiananas top square fusion lavanda com beje ", 
+        retailPrice: 17, 
+        wholesalePrice: 13, 
+        sizes: ["34", "35", "36","37","38","39"], 
+        image: "https://i.im.ge/2025/02/19/HxxpQy.WhatsApp-Image-2025-02-17-at-13-19-46-1-removebg-preview.png" 
+      },
+    
+      { 
+        name: "havaiananas top square fusion preta com braco  ", 
+        retailPrice: 17, 
+        wholesalePrice: 13, 
+        sizes: ["34", "35", "36","37","38","39"], 
+        image: "https://i.im.ge/2025/02/19/HxxvLS.WhatsApp-Image-2025-02-17-at-13-19-46-2-removebg-preview.png" 
+      },
+
+      { 
+        name: "havaiananas top square fusion azul com roxa    ", 
+        retailPrice: 17, 
+        wholesalePrice: 13, 
+        sizes: ["34", "35", "36","37","38","39"], 
+        image: "https://i.im.ge/2025/02/19/HxxJxz.WhatsApp-Image-2025-02-17-at-13-19-46-removebg-preview.png" 
+      },
+    
+    
+      
+     
+
+     
+
+      {
+        name: "havainas lavanda com stras", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/05/HalLMF.WhatsApp-Image-2025-02-03-at-14-30-13-2.jpeg" 
+      },
+      { 
+        name: "havainas verde agua com stras", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/05/HalUDK.WhatsApp-Image-2025-02-03-at-14-30-13-3.jpeg" 
+      },
+
+      { 
+        name: "havainas beje com stras", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/05/HalDg6.WhatsApp-Image-2025-02-03-at-14-30-13.jpeg" 
+      },
+
+      { 
+        name: "havainas branca lilo stitch ", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/04/Hqbfb1.WhatsApp-Image-2025-02-03-at-14-29-12.jpeg" 
+      },
+
+      { 
+        name: "havainas branca c/ rose lilo stitch ", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/04/HqYG3h.WhatsApp-Image-2025-02-03-at-14-29-12-3.jpeg" 
+      },
+
+      { 
+        name: "havainas rose lilo stitch ", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/04/HqY3kT.WhatsApp-Image-2025-02-03-at-14-29-12-1.jpeg" 
+      },
+
+      { 
+        name: "havainas branca com glitter dourado ", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/04/Hq35XG.WhatsApp-Image-2025-02-03-at-14-31-32-2.jpeg" 
+      },
+
+      { 
+        name: "havainas preta com glitter dourado ", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/04/HqcK6z.WhatsApp-Image-2025-02-03-at-14-31-32-3.jpeg" 
+      },
+
+      { 
+        name: "havainas verde agua com glitter dourado ", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/04/Hq3iKL.WhatsApp-Image-2025-02-03-at-14-31-33.jpeg" 
+      },
+
+      
+      { 
+        name: "havainas rose com glitter dourado ", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/04/HqxAo1.WhatsApp-Image-2025-02-03-at-14-31-32-1.jpeg" 
+      },
+
+      { 
+        name: "havainas rose bb com glitter dourado ", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/04/Hq3hwc.WhatsApp-Image-2025-02-03-at-14-31-32.jpeg" 
+      },
+
+      { 
+        name: "havainas infatil homem aranha vermelho ", 
+        retailPrice: 10, 
+        wholesalePrice: 8.5,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/12/HwTYSM.WhatsApp-Image-2025-02-11-at-12-04-00-1-removebg-preview.png" 
+      },
+
+
+      { 
+        name: "havainas infatil homem aranha azul ", 
+        retailPrice: 10, 
+        wholesalePrice: 8.5,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/12/HwTxvh.WhatsApp-Image-2025-02-11-at-12-04-01-2-removebg-preview.png" 
+      },
+
+
+
+      { 
+        name: "havainas infatil relãmpago mcqueen azul ", 
+        retailPrice: 10, 
+        wholesalePrice: 8.5,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/12/HwXMR4.WhatsApp-Image-2025-02-11-at-12-04-03-removebg-preview.png" 
+      },
+
+      { 
+        name: "havainas infatil hulk  ", 
+        retailPrice: 10, 
+        wholesalePrice: 8.5,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/12/HwXmo6.WhatsApp-Image-2025-02-11-at-12-04-01-5.png" 
+      },
+
+      { 
+        name: "havainas infatil capital america ", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/12/HwX6YK.WhatsApp-Image-2025-02-11-at-12-04-01-4.png" 
+      },
+
+
+
+      { 
+        name: "havainas infatil minnie ", 
+        retailPrice: 10, 
+        wholesalePrice: 8.5,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/12/HwXwhF.WhatsApp-Image-2025-02-11-at-12-04-02-5.png" 
+      },
+
+
+
+      { 
+        name: "havainas infatil vaca ", 
+        retailPrice: 10, 
+        wholesalePrice: 8.5,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/12/HwXNB9.WhatsApp-Image-2025-02-11-at-12-04-02-4.png" 
+      },
+
+
+      
+      { 
+        name: "havainas infatil lilo ", 
+        retailPrice: 10, 
+        wholesalePrice: 8.5,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/12/HwTCDX.WhatsApp-Image-2025-02-11-at-12-04-00-removebg-preview.png" 
+      },
+
+
+
+      
+      { 
+        name: "havainas beje com glitter na correia ", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/12/HwXchC.WhatsApp-Image-2025-02-11-at-12-03-18-1.png" 
+      },
+
+
+      
+      { 
+        name: "havainas roxa com glitter na correia", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/12/HwXgbq.WhatsApp-Image-2025-02-11-at-12-03-17.png" 
+      },
+
+
+
+
+      { 
+        name: "havainas branca com glitter na correia", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/12/HwXBaG.WhatsApp-Image-2025-02-11-at-12-03-17-1-removebg-preview.png" 
+      },
+
+
+
+
+
+      { 
+        name: "havainas roxa bb com glitter na correia", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/12/HwXnGL.WhatsApp-Image-2025-02-11-at-12-03-18-removebg-preview.png" 
+      },
+
+
+
+      { 
+        name : "havainas preta com glitter na correia", 
+        retailPrice: 17, 
+        wholesalePrice: 13,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/12/HwXJbc.WhatsApp-Image-2025-02-11-at-12-03-17-2-removebg-preview.png" 
+      },
+
+
+
+      { 
+        name: "nike asuna cinza c/ branco ", 
+        retailPrice: 90, 
+        wholesalePrice: 80,
+        sizes: ["38", "39", "40","42","43","44"],
+        image: "https://i.im.ge/2025/02/05/Har0UT.WhatsApp-Image-2025-02-03-at-14-30-20-1.jpeg" 
+      },
+
+
+
+      { 
+        name: "nike asuna preto c/ branco ", 
+        retailPrice: 90, 
+        wholesalePrice: 80,
+        sizes: ["38", "39", "40","42","43","44"],
+        image: "https://i.im.ge/2025/02/05/HariT0.WhatsApp-Image-2025-02-03-at-14-30-20.jpeg" 
+      },
+
+      { 
+        name: "crocs infatil patrulha canina azul ", 
+        retailPrice: 20, 
+        wholesalePrice: 15,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/05/HalVJG.WhatsApp-Image-2025-02-03-at-14-30-12.jpeg" 
+      },
+
+
+      { 
+        name: "crocs infatil roxa bb com lavanda lilo stitch casal ", 
+        retailPrice: 20, 
+        wholesalePrice: 15,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/05/HalKxL.WhatsApp-Image-2025-02-03-at-14-30-12-1.jpeg" 
+      },
+
+      { 
+        name: "crocs infatil roxa lilo stitch ", 
+        retailPrice: 20, 
+        wholesalePrice: 15,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/05/Hal880.WhatsApp-Image-2025-02-03-at-14-30-12-3.jpeg" 
+      },
+
+
+
+      { 
+        name: "crocs infatil azul e rose lilo stitch  ", 
+        retailPrice: 20, 
+        wholesalePrice: 15,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/05/Halg5W.WhatsApp-Image-2025-02-03-at-14-30-12-5.jpeg" 
+      },
+
+
+      { 
+        name: "crocs brano c/ raxa cachorrinho  ", 
+        retailPrice: 20, 
+        wholesalePrice: 15,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/05/Halcur.WhatsApp-Image-2025-02-03-at-14-30-12-4.jpeg" 
+      },
+
+      { 
+        name: "crocs infatil batman preto com amarelo ", 
+        retailPrice: 20, 
+        wholesalePrice: 15,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/05/HalWQT.WhatsApp-Image-2025-02-03-at-14-30-12-2.jpeg" 
+      },
+
+
+
+      { 
+        name: "crocs infantil minnie preto c/ roxa ", 
+        retailPrice: 20, 
+        wholesalePrice: 15,
+        sizes: ["25", "26", "27","28","29","30"],
+        image: "https://i.im.ge/2025/02/05/HalZIc.WhatsApp-Image-2025-02-03-at-14-30-11.jpeg" 
+      },
+
+
+
+      { 
+        name: "crocs plataforma preto lilo stitch  ", 
+        retailPrice: 55, 
+        wholesalePrice: 40,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/12/HwlNlW.WhatsApp-Image-2025-02-11-at-12-03-02-1-removebg-preview.png" 
+      },
+
+
+      { 
+        name: "crocs plataforma beje lisa simpsons ", 
+        retailPrice: 55, 
+        wholesalePrice: 40,
+        sizes: ["34", "35", "36","37","38","39"],
+        image: "https://i.im.ge/2025/02/12/HwlwVr.WhatsApp-Image-2025-02-11-at-12-03-02-removebg-preview.png" 
+      },
+
+
+    ];
+
+    function loadProducts() {
+      const productList = document.getElementById('productList');
+      products.forEach((product, index) => {
+        productList.innerHTML += `
+          <div class="product">
+            <img src="${product.image}" alt="${product.name}">
+            <h3>${product.name}</h3>
+            <div class="prices">
+              <span class="retail">Varejo: R$ ${product.retailPrice.toFixed(2)}</span>
+              <span class="wholesale">Atacado: R$ ${product.wholesalePrice.toFixed(2)}</span>
+            </div>
+            <div class="controls">
+              <label for="size${index}">Tamanho:</label>
+              <select id="size${index}">
+                ${product.sizes.map(size => `<option value="${size}">${size}</option>`).join('')}
+              </select>
+              <label for="quantity${index}">Quantidade:</label>
+              <input type="number" id="quantity${index}" value="1" min="1">
+            </div>
+            <button onclick="addToCart(${index})">Adicionar ao Carrinho</button>
+          </div>
+        `;
+      });
+    }
+
+    function addToCart(index) {
+      const product = products[index];
+      const size = document.getElementById(`size${index}`).value;
+      const quantity = parseInt(document.getElementById(`quantity${index}`).value);
+      
+      // Verifica se o produto com o mesmo tamanho já existe no carrinho
+      const existingProduct = cart.find(item => item.name === product.name && item.size === size);
+      
+      if (existingProduct) {
+        existingProduct.quantity += quantity;
+      } else {
+        cart.push({ ...product, size, quantity });
+      }
+      renderCart();
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      renderCart();
+    }
+
+    function updateQuantity(index, newQuantity) {
+      cart[index].quantity = parseInt(newQuantity);
+      renderCart();
+    }
+
+    function renderCart() {
+      const cartItemsDiv = document.getElementById('cart-items');
+      cartItemsDiv.innerHTML = '';
+      let total = 0;
+      
+      // Calcula a quantidade total de itens no carrinho
+      const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
+      
+      // Se o total for menor que 10, força o uso do preço de varejo
+      if(totalQuantity < 10) {
+        useWholesale = false;
+      }
+      
+      cart.forEach((item, index) => {
+        // Define o preço de acordo com a escolha do usuário
+        let price = useWholesale ? item.wholesalePrice : item.retailPrice;
+        total += price * item.quantity;
+        
+        cartItemsDiv.innerHTML += `
+          <div class="cart-item">
+            <img src="${item.image}" alt="${item.name}">
+            <div>
+              <span>${item.name} (${item.size})</span><br>
+              <input type="number" value="${item.quantity}" min="1" onchange="updateQuantity(${index}, this.value)">
+            </div>
+            <div>
+              <span>R$ ${(price * item.quantity).toFixed(2)}</span><br>
+              <button onclick="removeFromCart(${index})">Remover</button>
+            </div>
+          </div>
+        `;
+      });
+      
+      document.getElementById('total-price').textContent = `R$ ${total.toFixed(2)}`;
+
+      // Se atingir o limite de 10 itens, mostra a opção de alternar para preço de atacado
+      const pricingToggleDiv = document.getElementById('pricing-toggle');
+      if(totalQuantity >= 10) {
+        pricingToggleDiv.innerHTML = `
+          <p>Total de peças: ${totalQuantity}</p>
+          ${!useWholesale 
+            ? `<button onclick="setWholesale(true)">Aplicar preço de atacado</button>` 
+            : `<button onclick="setWholesale(false)">Manter preço de varejo</button>`}
+        `;
+      } else {
+        pricingToggleDiv.innerHTML = '';
+      }
+    }
+
+    function setWholesale(value) {
+      useWholesale = value;
+      renderCart();
+    }
+
+    function toggleCart() {
+      document.getElementById('cartMenu').classList.toggle('open');
+    }
+
+    // Função atualizada para enviar uma mensagem detalhada para o WhatsApp
+    function finalizePurchase() {
+      let pricingType = useWholesale ? 'Atacado' : 'Varejo';
+      let message = `Pedido (${pricingType}):\n\n`;
+      cart.forEach(item => {
+        let price = useWholesale ? item.wholesalePrice : item.retailPrice;
+        let subtotal = price * item.quantity;
+        message += `${item.name} (${item.size})\n`;
+        message += `Quantidade: ${item.quantity} x R$ ${price.toFixed(2)} = R$ ${subtotal.toFixed(2)}\n\n`;
+      });
+      let total = cart.reduce((sum, item) => sum + ((useWholesale ? item.wholesalePrice : item.retailPrice) * item.quantity), 0);
+      message += `Total: R$ ${total.toFixed(2)}`;
+      
+      const url = `https://wa.me/5511983806079?text=${encodeURIComponent(message)}`;
+      window.open(url, "_blank");
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>

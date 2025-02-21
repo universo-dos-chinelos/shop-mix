@@ -182,6 +182,85 @@
   </style>
 </head>
 <body>
+
+
+
+
+  <header>
+
+    <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrossel Automático</title>
+    <style>
+        * {
+            margin: 5px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .carousel-container {
+            width: 100%;
+            max-width: 600px;
+            overflow: hidden;
+            position: relative;
+            margin: auto;
+        }
+        .carousel {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+        .carousel img {
+            width: 100%;
+            height: auto;
+            max-height: 300px;
+        }
+        @media (max-width: 600px) {
+            .carousel img {
+                max-height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="carousel-container">
+        <div class="carousel">
+            <img src="https://i.im.ge/2025/02/19/HxxJxz.WhatsApp-Image-2025-02-17-at-13-19-46-removebg-preview.png" alt="Imagem 1">
+            <img src="https://i.im.ge/2025/02/19/HxxpQy.WhatsApp-Image-2025-02-17-at-13-19-46-1-removebg-preview.png" alt="Imagem 2">
+            <img src="https://i.im.ge/2025/02/19/Hxxfux.WhatsApp-Image-2025-02-17-at-13-19-46-3-removebg-preview.png" alt="Imagem 4">
+            <img src="https://i.im.ge/2025/02/12/HwlNlW.WhatsApp-Image-2025-02-11-at-12-03-02-1-removebg-preview.png" alt="Imagem 5">
+            <img src="https://i.im.ge/2025/02/12/HwlwVr.WhatsApp-Image-2025-02-11-at-12-03-02-removebg-preview.png" alt="Imagem 6">
+            <img src="https://i.im.ge/2025/02/21/Hcvpkq.WhatsApp-Image-2025-02-21-at-10-33-46-2.png" alt="Imagem 7">
+            <img src="https://i.im.ge/2025/02/21/HcvYPF.WhatsApp-Image-2025-02-21-at-10-33-43.png" alt="Imagem 8">
+            <img src="https://i.im.ge/2025/02/12/HwX6YK.WhatsApp-Image-2025-02-11-at-12-04-01-4.png" alt="Imagem 9">
+            <img src="https://i.im.ge/2025/02/12/HwXwhF.WhatsApp-Image-2025-02-11-at-12-04-02-5.png" alt="Imagem 10">
+        </div>
+    </div>
+    
+    <script>
+        const carousel = document.querySelector(".carousel");
+        let index = 0;
+
+        function moveCarousel() {
+            index++;
+            if (index >= carousel.children.length) {
+                index = 0;
+            }
+            const offset = -index * 100;
+            carousel.style.transform = `translateX(${offset}%)`;
+        }
+        setInterval(moveCarousel, 3000);
+    </script>
+</body>
+</html>
+
+
+
+
+  </header>
+
+
   <h1>universo dos chinelos </h1>
   <div class="product-container" id="productList"></div>
 
